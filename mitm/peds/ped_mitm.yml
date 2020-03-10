@@ -1,0 +1,60 @@
+descriptor_version: 0.2  # 5GTANGO: 0.2, SONATA 0.1
+vendor: "de.upb"
+name: "ped_mitm"
+version: "1.0"
+author: "Ishwariya Raveendran"
+description: "PG-Backflip"
+
+# Path to the network service we want to profile (relative from PED location)
+service_package: "../services/ns_mitm"
+
+# Experiment definition
+service_experiments:
+  - name: "ped_mitm"
+    description: "Benchmark experiment"
+    repetitions: 35
+    time_limit: 60 # seconds per experiment
+    time_warmup: 5
+    # NSD to be used (vendor.name.version reference)
+    target:
+      vendor: "de.upb"
+      name: "ns_mitm"
+      version: "0.1"
+    # additional containers for traffic generation/measurements (measurement points)
+    measurement_points:
+      - name: "mp.output"
+        connection_point: "ns:output"
+        container: "mpeuster/vnf-ws-apache"
+        address: "40.0.0.254/24"  # address of the WS 1
+      - name: "mp.input"
+        connection_point: "ns:input"
+        container: "mpeuster/tng-bench-mp"
+        address: "20.0.0.1/24"  # address of the data interface of the MP
+    # experiment parameters to be tested during the experiment
+    experiment_parameters:
+      - function: "de.upb.proxy_mitm.0.1"
+        cmd_start: "./start.sh"
+        cmd_stop: "./stop.sh"
+        #cpu_bw: {"min": 0.2, "max": 1.0, "step": 0.2}  # float: fraction of CPU time in vim-emu
+        cpu_cores: ["1","2","4"]  # string: this is "cpuset_cpu" in vim-emu e.g. ["0, 1"] -> 2 CPUs
+        mem_max: [1024, 2048, 4096]  # int: Memory in MByte
+        mem_swap_max: null
+        io_bw: null
+      - function: "mp.input"
+        cmd_start: [
+                "ab -c 999 -r -t 60 -n 9999999 -e /tngbench_share/ab_mitm.csv -s 60 -k -X 20.0.0.254:8080 http://40.0.0.254:80/"
+                                ]
+        cmd_stop: "./stop.sh"
+        cpu_bw: null  # float: fraction of CPU time in vim-emu
+        cpu_cores: "2"  # string: this is "cpuset_cpu" in vim-emu e.g. ["0, 1"] -> 2 CPUs
+        mem_max: null  # int: Memory in MByte
+        mem_swap_max: null
+        io_bw: null
+      - function: "mp.output"
+        cmd_start: "./start.sh"
+        cmd_stop: "./stop.sh"  # dump packet counters to logs
+        cpu_bw: null  # float: fraction of CPU time in vim-emu
+        cpu_cores: "2"  # string: this is "cpuset_cpu" in vim-emu e.g. ["0, 1"] -> 2 CPUs
+        mem_max: null  # int: Memory in MByte
+        mem_swap_max: null
+        io_bw: null
