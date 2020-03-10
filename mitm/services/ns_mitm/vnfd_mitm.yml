@@ -7,7 +7,7 @@ author: Ishwariya Raveendran
 description: pg-backflip
 virtual_deployment_units:
   - id: vdu01
-    vm_image: ishu06/mitm_vnf_ubuntu2
+    vm_image: ishu06/mitm_proxy
     vm_image_format: docker
     resource_requirements:
       cpu:
